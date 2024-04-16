@@ -113,3 +113,23 @@ delimiter ;
 
 # calling the procedure to see the #1 ranking transaction for each customer (based on sales)
 call p_rank(1);
+
+# creating a view to generate the lowest sales transaction from each market
+create view v_lowest_sales as
+select * from
+(select 
+	row_number() over () as trans_no,
+    markets_name,custmer_name, customer_type, order_date, sales_qty, sales_amount, profit_margin_percentage,
+    row_number() over (partition by markets_name order by sales_amount asc) as sales_rank_asc
+from
+	transactions t
+    join
+    customers c on t.customer_code= c.customer_code
+    join
+    markets m on t.market_code= m.markets_code) a
+where sales_rank_asc=1;
+
+select * from v_lowest_sales;
+
+drop view if exists v_lowest_sales;
+
